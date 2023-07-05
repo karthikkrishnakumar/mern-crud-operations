@@ -12,10 +12,12 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/').post(registerUser);
-router.post('/auth', authUser);
+router.post('/login', authUser);
 router.route('/logout').post(protect, logoutUser);
-router.route('/profile').get(protect,getUserProfile).put(protect,updateUserProfile);
+
+router.route('/register').post(registerUser);
+router.route('/profile').get(protect,getUserProfile);
+router.route('/update').put(protect,updateUserProfile);
 router.route('/delete').post(protect, deleteUserProfile);
 router.route('/list').post(protect, listUserProfiles);
 

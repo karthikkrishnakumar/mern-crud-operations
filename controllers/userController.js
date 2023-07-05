@@ -5,8 +5,38 @@ import generateToken from "../utils/generateToken.js";
 // @desc    Auth user & get token
 // @route   POST /api/users/auth
 // @access  Public
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Login User
+ *     operationId: login
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *        - in: query
+ *          name: email
+ *          description: "Your email"
+ *          type: string
+ *        - in: query
+ *          name: password
+ *          description: "Your password"
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *       422:
+ *         description: Unprocessable Entity
+ *       401:
+ *         description: Unauthenticated
+ */
 const authUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.query;
 
   const user = await User.findOne({ email });
   if (user && (await user.matchPassword(password))) {
@@ -16,15 +46,48 @@ const authUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      token: token,
     });
   } else {
     res.status(401);
     throw new Error("Invalid email or password");
   }
 });
+
 // @desc    Register a new user
 // @route   POST /api/users
 // @access  Public
+
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Register New User
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *        - in: query
+ *          name: name
+ *          description: User name
+ *          type: string
+ *        - in: query
+ *          name: email
+ *          description: User email address
+ *          type: string
+ *        - in: query
+ *          name: password
+ *          description: Your password
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *       422:
+ *         description: Unprocessable Entity
+ *       401:
+ *         description: Unauthenticated
+ */
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
   const userExists = await User.findOne({ email });
@@ -56,6 +119,23 @@ const registerUser = asyncHandler(async (req, res) => {
 // @desc    Logout user / clear cookie
 // @route   POST /api/users/logout
 // @access  Public
+/**
+ * @swagger
+ * /logout:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Logout user
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: Success
+ *       422:
+ *         description: Unprocessable Entity
+ *       401:
+ *         description: Unauthenticated
+ */
 const logoutUser = (req, res) => {
   res.cookie("jwt", "", {
     httpOnly: true,
@@ -67,6 +147,23 @@ const logoutUser = (req, res) => {
 // @desc    Get user profile
 // @route   GET /api/users/profile
 // @access  Private
+/**
+ * @swagger
+ * /profile:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Return logged in user details
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: Success
+ *       422:
+ *         description: Unprocessable Entity
+ *       401:
+ *         description: Unauthenticated
+ */
 const getUserProfile = asyncHandler(async (req, res) => {
   if (req.user) {
     res.json({
@@ -83,6 +180,36 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @desc    Update user profile
 // @route   PUT /api/users/profile
 // @access  Private
+/**
+ * @swagger
+ * /update:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Update User Profile
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *        - in: query
+ *          name: name
+ *          description: User name
+ *          type: string
+ *        - in: query
+ *          name: email
+ *          description: User email address
+ *          type: string
+ *        - in: query
+ *          name: password
+ *          description: Your password
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *       422:
+ *         description: Unprocessable Entity
+ *       401:
+ *         description: Unauthenticated
+ */
 const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -110,15 +237,36 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @desc    Delete user profile
 // @route   DELETE /api/users/profile
 // @access  Private
+/**
+ * @swagger
+ * /delete:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Delete User by email
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *        - in: query
+ *          name: email
+ *          description: User email address
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *       422:
+ *         description: Unprocessable Entity
+ *       401:
+ *         description: Unauthenticated
+ */
 const deleteUserProfile = asyncHandler(async (req, res) => {
-
   const { email } = req.body;
   const user = await User.findOne({ email });
   if (user) {
-   const deleted= await User.deleteOne({ email });
-   if(deleted){
-    res.json({ message: "User profile deleted successfully" });
-   } 
+    const deleted = await User.deleteOne({ email });
+    if (deleted) {
+      res.json({ message: "User profile deleted successfully" });
+    }
   } else {
     res.status(404);
     throw new Error("User not found");
@@ -128,6 +276,24 @@ const deleteUserProfile = asyncHandler(async (req, res) => {
 // @desc    List user profiles
 // @route   GET /api/users/profiles
 // @access  Private/Admin
+
+/**
+ * @swagger
+ * /list:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: List all user
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: Success
+ *       422:
+ *         description: Unprocessable Entity
+ *       401:
+ *         description: Unauthenticated
+ */
 const listUserProfiles = asyncHandler(async (req, res) => {
   const users = await User.find({});
   const message = "User profiles retrieved successfully";
@@ -141,5 +307,5 @@ export {
   getUserProfile,
   updateUserProfile,
   deleteUserProfile,
-  listUserProfiles
+  listUserProfiles,
 };
